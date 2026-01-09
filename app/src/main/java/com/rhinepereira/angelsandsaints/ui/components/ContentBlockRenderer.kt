@@ -14,10 +14,12 @@ import com.rhinepereira.angelsandsaints.data.model.ContentBlock
 
 @Composable
 fun ContentBlockRenderer(block: ContentBlock) {
+    val blockValue = block.value ?: return // Don't render if value is null
+    
     when (block.type) {
         "heading" -> {
             Text(
-                text = block.value,
+                text = blockValue,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -27,7 +29,7 @@ fun ContentBlockRenderer(block: ContentBlock) {
         }
         "text" -> {
             Text(
-                text = block.value,
+                text = blockValue,
                 style = MaterialTheme.typography.bodyLarge,
                 lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3,
                 modifier = Modifier
@@ -37,18 +39,17 @@ fun ContentBlockRenderer(block: ContentBlock) {
         }
         "image" -> {
             AsyncImage(
-                model = block.value,
+                model = blockValue,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
-                // Use FillWidth to let the image's natural height dictate the space
                 contentScale = ContentScale.FillWidth
             )
         }
         else -> {
             Text(
-                text = block.value,
+                text = blockValue,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(vertical = 4.dp)
             )

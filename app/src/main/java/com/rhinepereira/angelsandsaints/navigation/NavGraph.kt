@@ -48,7 +48,7 @@ fun NavGraph(
         ) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
             val viewModel: CategoryViewModel = viewModel(
-                key = categoryId, // Unique key per category
+                key = categoryId,
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return CategoryViewModel(repository, categoryId) as T
@@ -58,21 +58,25 @@ fun NavGraph(
             CategoryScreen(
                 viewModel = viewModel,
                 onItemClick = { contentId ->
-                    navController.navigate(Screen.Content.createRoute(contentId))
+                    navController.navigate(Screen.Content.createRoute(categoryId, contentId))
                 }
             )
         }
 
         composable(
             route = Screen.Content.route,
-            arguments = listOf(navArgument("contentId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("categoryId") { type = NavType.StringType },
+                navArgument("contentId") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
             val contentId = backStackEntry.arguments?.getString("contentId") ?: return@composable
             val viewModel: ContentViewModel = viewModel(
-                key = contentId, // Unique key per item
+                key = contentId,
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return ContentViewModel(repository, contentId) as T
+                        return ContentViewModel(repository, categoryId, contentId) as T
                     }
                 }
             )

@@ -15,6 +15,7 @@ import java.io.IOException
 
 class ContentViewModel(
     private val repository: ContentRepository,
+    val categoryId: String,
     private val contentId: String
 ) : ViewModel() {
 
