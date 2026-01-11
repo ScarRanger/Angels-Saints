@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.rhinepereira.angelsandsaints"
+    namespace = "com.rhinepereira.saints"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.rhinepereira.angelsandsaints"
+        applicationId = "com.rhinepereira.saints"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
