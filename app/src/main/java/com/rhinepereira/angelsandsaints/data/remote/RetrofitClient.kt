@@ -41,24 +41,31 @@ object RetrofitClient {
             .cache(cache)
             .addInterceptor { chain ->
                 var request = chain.request()
-                
                 if (!isNetworkAvailable(context)) {
-                    // Force cache if no network
+                    // Offline: force cache
                     request = request.newBuilder()
                         .header("Cache-Control", "public, only-if-cached, max-stale=" + 60 * 60 * 24 * 365)
                         .build()
+                } else {
+                    // Online: bypass cache for specific requests or use short-lived cache
+                    // But for our specific "max-age" logic, we handle it in network interceptor
                 }
-                
+                chain.proceed(request)
+            }
+            .addNetworkInterceptor { chain ->
+                val request = chain.request()
                 val response = chain.proceed(request)
                 
-                // If it's a network response, override headers to cache forever
-                if (isNetworkAvailable(context)) {
+                // If the request specifically asks for no-cache (like our getHome), 
+                // we still let it through. Otherwise, we cache.
+                val cacheControl = request.header("Cache-Control")
+                if (cacheControl?.contains("no-cache") == true) {
+                    response
+                } else {
                     response.newBuilder()
                         .header("Cache-Control", "public, max-age=" + 60 * 60 * 24 * 365)
                         .removeHeader("Pragma")
                         .build()
-                } else {
-                    response
                 }
             }
             .build()

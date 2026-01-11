@@ -22,10 +22,17 @@ class HomeViewModel(
 
     init {
         loadCategories()
+        // Prefetch everything for a complete offline experience
+        viewModelScope.launch {
+            repository.prefetchEverything()
+        }
     }
 
     fun retry() {
         loadCategories()
+        viewModelScope.launch {
+            repository.prefetchEverything()
+        }
     }
 
     private fun loadCategories() {

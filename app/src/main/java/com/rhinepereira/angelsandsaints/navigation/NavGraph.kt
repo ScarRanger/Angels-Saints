@@ -11,6 +11,10 @@ import com.rhinepereira.angelsandsaints.category.CategoryScreen
 import com.rhinepereira.angelsandsaints.category.CategoryViewModel
 import com.rhinepereira.angelsandsaints.content.ContentScreen
 import com.rhinepereira.angelsandsaints.content.ContentViewModel
+import com.rhinepereira.angelsandsaints.content.DailyFeastScreen
+import com.rhinepereira.angelsandsaints.content.DailyFeastViewModel
+import com.rhinepereira.angelsandsaints.content.DailyReadingsScreen
+import com.rhinepereira.angelsandsaints.content.DailyReadingsViewModel
 import com.rhinepereira.angelsandsaints.data.repository.ContentRepository
 import com.rhinepereira.angelsandsaints.home.HomeScreen
 import com.rhinepereira.angelsandsaints.home.HomeViewModel
@@ -37,8 +41,40 @@ fun NavGraph(
             HomeScreen(
                 viewModel = viewModel,
                 onCategoryClick = { categoryId ->
-                    navController.navigate(Screen.Category.createRoute(categoryId))
+                    when (categoryId) {
+                        "daily-feast" -> navController.navigate("daily-feast-content")
+                        "daily-readings" -> navController.navigate("daily-readings-content")
+                        else -> navController.navigate(Screen.Category.createRoute(categoryId))
+                    }
                 }
+            )
+        }
+
+        composable("daily-feast-content") {
+            val viewModel: DailyFeastViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return DailyFeastViewModel(repository) as T
+                    }
+                }
+            )
+            DailyFeastScreen(
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable("daily-readings-content") {
+            val viewModel: DailyReadingsViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return DailyReadingsViewModel(repository) as T
+                    }
+                }
+            )
+            DailyReadingsScreen(
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() }
             )
         }
 

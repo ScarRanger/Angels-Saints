@@ -25,3 +25,28 @@ data class ContentResponse(
     @Json(name = "blocks") val blocks: List<ContentBlock>? = emptyList(),
     @Json(name = "versions") val versions: List<ContentVersion>? = null
 )
+
+data class DailyFeastResponse(
+    @Json(name = "date") val date: String?,
+    @Json(name = "observance") val observance: Observance?,
+    @Json(name = "blocks") val blocks: List<ContentBlock>? = emptyList()
+)
+
+data class Observance(
+    @Json(name = "title") val title: String?
+)
+
+data class DailyReadingsResponse(
+    @Json(name = "date") val date: String?,
+    @Json(name = "url") val url: String?,
+    @Json(name = "title") val title: String?,
+    @Json(name = "feast") val feast: String?,
+    @Json(name = "readings") val readings: List<Reading>? = emptyList()
+)
+
+data class Reading(
+    @Json(name = "type") val type: String?,
+    @Json(name = "heading") val heading: String?,
+    @Json(name = "reference") val reference: String?,
+    @Json(name = "verses") val verses: List<String>? = emptyList()
+)
