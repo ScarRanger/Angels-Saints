@@ -14,6 +14,6 @@ interface ContentRepository {
     fun getItemById(itemId: String): Flow<Item?>
     fun getContent(contentId: String): Flow<ContentResponse>
     fun getDailyFeast(date: Date = Date()): Flow<DailyFeastResponse>
-    fun getDailyReadings(date: Date = Date()): Flow<DailyReadingsResponse>
+    fun getDailyReadings(date: Date = Date(), language: String = "english"): Flow<DailyReadingsResponse>
     suspend fun prefetchEverything()
 }

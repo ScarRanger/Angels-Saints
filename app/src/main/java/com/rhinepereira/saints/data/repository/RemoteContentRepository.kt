@@ -21,7 +21,10 @@ class RemoteContentRepository(
 
     override fun getCategories(): Flow<List<Category>> = flow {
         val response = api.getHome()
-        emit(response.categories ?: emptyList())
+        val categories = (response.categories ?: emptyList())
+            .filter { it.enabled }
+            .sortedBy { it.order }
+        emit(categories)
     }
 
     override fun getItemsByCategory(categoryId: String): Flow<List<Item>> = flow {
@@ -43,18 +46,28 @@ class RemoteContentRepository(
         val month = SimpleDateFormat("MM", Locale.US).format(date)
         val fullDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(date)
         val dynamicPath = "feast-daily/$year/$month/$fullDate.json"
+        
+        Log.d("DailyFeast", "Fetching from: $dynamicPath")
+        
         val response = api.getDailyFeast(dynamicPath)
         emit(response)
     }
 
-    override fun getDailyReadings(date: Date): Flow<DailyReadingsResponse> = flow {
+    override fun getDailyReadings(date: Date, language: String): Flow<DailyReadingsResponse> = flow {
         val year = SimpleDateFormat("yyyy", Locale.US).format(date)
         val month = SimpleDateFormat("MM", Locale.US).format(date)
         val fullDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(date)
         
-        // Construct path: readings/YYYY/MM/YYYY-MM-DD.json
-        val dynamicPath = "readings/$year/$month/$fullDate.json"
-        Log.d("DailyReadings", "Fetching from: $dynamicPath")
+        val dynamicPath = if (language.lowercase() == "marathi") {
+            // Marathi path: readings-marathi/YYYY/YYYY-MM-DD.json (No Month folder)
+            "readings-marathi/$year/$month/$fullDate.json"
+        } else {
+            // English path: readings/YYYY/MM/YYYY-MM-DD.json
+            "readings/$year/$month/$fullDate.json"
+        }
+        
+        Log.d("DailyReadings", "Language: $language | Path: $dynamicPath")
+        Log.d("DailyReadings", "Expected Full URL: https://scarranger.github.io/angelsandsaints_data/content/$dynamicPath")
         
         val response = api.getDailyReadings(dynamicPath)
         emit(response)
@@ -69,7 +82,10 @@ class RemoteContentRepository(
                         try {
                             when (category.id.trim()) {
                                 "daily-feast" -> getDailyFeast(Date()).collect {}
-                                "daily-readings" -> getDailyReadings(Date()).collect {}
+                                "daily-readings" -> {
+                                    getDailyReadings(Date(), "english").collect {}
+                                    getDailyReadings(Date(), "marathi").collect {}
+                                }
                                 else -> {
                                     val categoryItems = api.getCategoryItems(category.id)
                                     categoryItems.items?.forEach { item ->

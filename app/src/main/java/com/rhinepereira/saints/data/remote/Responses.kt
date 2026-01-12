@@ -48,5 +48,7 @@ data class Reading(
     @Json(name = "type") val type: String?,
     @Json(name = "heading") val heading: String?,
     @Json(name = "reference") val reference: String?,
-    @Json(name = "verses") val verses: List<String>? = emptyList()
+    @Json(name = "verses") val verses: List<String>? = emptyList(),
+    @Json(name = "acclamation") val acclamation: String? = null,
+    @Json(name = "response") val response: String? = null
 )

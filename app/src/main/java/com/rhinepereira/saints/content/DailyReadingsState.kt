@@ -7,6 +7,7 @@ import java.util.Date
 data class DailyReadingsState(
     val isLoading: Boolean = false,
     val date: Date = Date(),
+    val language: String = "English",
     val data: DailyReadingsResponse? = null,
     val error: UiError? = null
 )

@@ -22,6 +22,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -31,7 +35,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.rhinepereira.saints.ui.components.ErrorState
 import java.text.SimpleDateFormat
@@ -80,6 +88,30 @@ fun DailyReadingsScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
 
+            val languages = listOf("English", "Marathi")
+            val selectedIndex = languages.indexOf(uiState.language)
+            
+            TabRow(
+                selectedTabIndex = selectedIndex,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary,
+                indicator = { tabPositions ->
+                    if (selectedIndex < tabPositions.size) {
+                        TabRowDefaults.Indicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedIndex])
+                        )
+                    }
+                }
+            ) {
+                languages.forEach { language ->
+                    Tab(
+                        selected = uiState.language == language,
+                        onClick = { viewModel.setLanguage(language) },
+                        text = { Text(language) }
+                    )
+                }
+            }
+
             DateNavigationRow(
                 date = uiState.date,
                 showPrev = canGoBackward,
@@ -126,26 +158,39 @@ fun DailyReadingsScreen(
 
                             items(data.readings ?: emptyList()) { reading ->
                                 Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                                    // Hidden reading.type as requested
-                                    Text(
-                                        text = reading.heading ?: "",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
+                                    // Hidden type and heading
+                                    
                                     Text(
                                         text = reading.reference ?: "",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
+                                        modifier = Modifier.padding(bottom = 8.dp)
                                     )
                                     
                                     reading.verses?.forEach { verse ->
-                                        Text(
-                                            text = verse,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3,
-                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        if (verse.isNotBlank()) {
+                                            Text(
+                                                text = verse,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3,
+                                                modifier = Modifier.padding(vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+
+                                    // NEW: Highlighted Acclamation and Response
+                                    if (!reading.acclamation.isNullOrBlank()) {
+                                        HighlightedLiturgyText(
+                                            label = if (uiState.language == "Marathi") "घोषणा" else "Acclamation",
+                                            value = reading.acclamation
+                                        )
+                                    }
+
+                                    if (!reading.response.isNullOrBlank()) {
+                                        HighlightedLiturgyText(
+                                            label = if (uiState.language == "Marathi") "प्रतिसाद" else "Response",
+                                            value = reading.response
                                         )
                                     }
                                 }
@@ -156,6 +201,26 @@ fun DailyReadingsScreen(
             }
         }
     }
+}
+
+@Composable
+private fun HighlightedLiturgyText(label: String, value: String) {
+    val annotatedString = buildAnnotatedString {
+        withStyle(style = SpanStyle(
+            color = MaterialTheme.colorScheme.error,
+            fontWeight = FontWeight.Bold
+        )) {
+            append("$label: ")
+        }
+        append(value)
+    }
+    
+    Text(
+        text = annotatedString,
+        style = MaterialTheme.typography.bodyLarge,
+        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
 }
 
 @Composable

@@ -24,32 +24,38 @@ class DailyReadingsViewModel(
     val uiState: StateFlow<DailyReadingsState> = _uiState.asStateFlow()
 
     init {
-        loadReadings(Date())
+        loadReadings(Date(), "English")
     }
 
     fun nextDay() {
         val calendar = Calendar.getInstance()
         calendar.time = _uiState.value.date
         calendar.add(Calendar.DAY_OF_YEAR, 1)
-        loadReadings(calendar.time)
+        loadReadings(calendar.time, _uiState.value.language)
     }
 
     fun previousDay() {
         val calendar = Calendar.getInstance()
         calendar.time = _uiState.value.date
         calendar.add(Calendar.DAY_OF_YEAR, -1)
-        loadReadings(calendar.time)
+        loadReadings(calendar.time, _uiState.value.language)
+    }
+
+    fun setLanguage(language: String) {
+        if (_uiState.value.language != language) {
+            loadReadings(_uiState.value.date, language)
+        }
     }
 
     fun retry() {
-        loadReadings(_uiState.value.date)
+        loadReadings(_uiState.value.date, _uiState.value.language)
     }
 
-    private fun loadReadings(date: Date) {
+    private fun loadReadings(date: Date, language: String) {
         viewModelScope.launch {
-            repository.getDailyReadings(date)
+            repository.getDailyReadings(date, language)
                 .onStart {
-                    _uiState.update { it.copy(isLoading = true, error = null, date = date) }
+                    _uiState.update { it.copy(isLoading = true, error = null, date = date, language = language) }
                 }
                 .catch { e ->
                     val uiError = when (e) {
