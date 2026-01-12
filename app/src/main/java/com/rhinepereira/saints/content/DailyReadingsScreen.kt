@@ -55,11 +55,16 @@ fun DailyReadingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Logic: Allow navigating to tomorrow at most
     val canGoForward = remember(uiState.date) {
-        val maxDate = Calendar.getInstance().apply {
-            set(2026, Calendar.DECEMBER, 31, 23, 59, 59)
+        val tomorrow = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, 1)
         }
-        uiState.date.before(maxDate.time)
+        uiState.date.before(tomorrow.time)
     }
 
     val canGoBackward = remember(uiState.date) {
@@ -158,28 +163,57 @@ fun DailyReadingsScreen(
 
                             items(data.readings ?: emptyList()) { reading ->
                                 Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                                    // Hidden type and heading
+                                    // Removed type header completely
                                     
+                                    Text(
+                                        text = reading.heading ?: "",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
                                     Text(
                                         text = reading.reference ?: "",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(bottom = 8.dp)
+                                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
                                     )
                                     
                                     reading.verses?.forEach { verse ->
-                                        if (verse.isNotBlank()) {
-                                            Text(
-                                                text = verse,
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3,
-                                                modifier = Modifier.padding(vertical = 4.dp)
-                                            )
+                                        // Refined highlighting logic
+                                        val annotatedVerse = buildAnnotatedString {
+                                            val highlights = listOf("Acclamation", "Response", "घोषणा", "प्रतिसाद")
+                                            var match: String? = null
+                                            
+                                            val trimmedVerse = verse.trim()
+                                            highlights.forEach { keyword ->
+                                                if (trimmedVerse.startsWith(keyword, ignoreCase = true)) {
+                                                    match = keyword
+                                                }
+                                            }
+                                            
+                                            if (match != null) {
+                                                withStyle(style = SpanStyle(
+                                                    color = MaterialTheme.colorScheme.error,
+                                                    fontWeight = FontWeight.Bold
+                                                )) {
+                                                    append(match!!)
+                                                }
+                                                // Append everything including punctuation after the match
+                                                append(trimmedVerse.substring(match!!.length))
+                                            } else {
+                                                append(verse)
+                                            }
                                         }
+
+                                        Text(
+                                            text = annotatedVerse,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
                                     }
 
-                                    // NEW: Highlighted Acclamation and Response
+                                    // Highlighted Acclamation and Response
                                     if (!reading.acclamation.isNullOrBlank()) {
                                         HighlightedLiturgyText(
                                             label = if (uiState.language == "Marathi") "घोषणा" else "Acclamation",

@@ -21,10 +21,19 @@ class RemoteContentRepository(
 
     override fun getCategories(): Flow<List<Category>> = flow {
         val response = api.getHome()
-        val categories = (response.categories ?: emptyList())
-            .filter { it.enabled }
+        val allCategories = response.categories ?: emptyList()
+        
+        // LOG ALL IDS to debug why some might be missing
+        allCategories.forEach { 
+            Log.d("HomeData", "Received Category: ID=${it.id}, Title=${it.title}, Enabled=${it.enabled}")
+        }
+
+        val filtered = allCategories
+            .filter { it.enabled != false } 
             .sortedBy { it.order }
-        emit(categories)
+        
+        Log.d("HomeData", "Final display count: ${filtered.size}")
+        emit(filtered)
     }
 
     override fun getItemsByCategory(categoryId: String): Flow<List<Item>> = flow {
@@ -46,9 +55,6 @@ class RemoteContentRepository(
         val month = SimpleDateFormat("MM", Locale.US).format(date)
         val fullDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(date)
         val dynamicPath = "feast-daily/$year/$month/$fullDate.json"
-        
-        Log.d("DailyFeast", "Fetching from: $dynamicPath")
-        
         val response = api.getDailyFeast(dynamicPath)
         emit(response)
     }
@@ -57,18 +63,11 @@ class RemoteContentRepository(
         val year = SimpleDateFormat("yyyy", Locale.US).format(date)
         val month = SimpleDateFormat("MM", Locale.US).format(date)
         val fullDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(date)
-        
         val dynamicPath = if (language.lowercase() == "marathi") {
-            // Marathi path: readings-marathi/YYYY/YYYY-MM-DD.json (No Month folder)
             "readings-marathi/$year/$month/$fullDate.json"
         } else {
-            // English path: readings/YYYY/MM/YYYY-MM-DD.json
             "readings/$year/$month/$fullDate.json"
         }
-        
-        Log.d("DailyReadings", "Language: $language | Path: $dynamicPath")
-        Log.d("DailyReadings", "Expected Full URL: https://scarranger.github.io/angelsandsaints_data/content/$dynamicPath")
-        
         val response = api.getDailyReadings(dynamicPath)
         emit(response)
     }

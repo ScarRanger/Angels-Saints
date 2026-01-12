@@ -51,10 +51,11 @@ fun CategoryCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(0.8f)
+            // Adjusted aspect ratio to be more compact (horizontal) to fit 8 items on screen
+            .aspectRatio(1.2f) 
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
@@ -64,7 +65,7 @@ fun CategoryCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Gradient Overlay for readability
+            // Gradient Overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -72,9 +73,9 @@ fun CategoryCard(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.Black.copy(alpha = 0.7f)
+                                Color.Black.copy(alpha = 0.6f)
                             ),
-                            startY = 300f
+                            startY = 100f
                         )
                     )
             )
@@ -83,12 +84,13 @@ fun CategoryCard(
                 text = category.title.uppercase(),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp),
+                    .padding(8.dp),
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = MaterialTheme.typography.labelLarge.copy(
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.2.sp
+                    letterSpacing = 1.sp,
+                    fontSize = 12.sp
                 )
             )
         }
