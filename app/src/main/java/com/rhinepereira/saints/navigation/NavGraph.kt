@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.rhinepereira.saints.category.CategoryScreen
 import com.rhinepereira.saints.category.CategoryViewModel
 import com.rhinepereira.saints.content.ContentScreen
@@ -64,7 +65,12 @@ fun NavGraph(
             )
         }
 
-        composable("daily-readings-content") {
+        composable(
+            route = "daily-readings-content",
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "saints://daily-readings" }
+            )
+        ) {
             val viewModel: DailyReadingsViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -80,7 +86,10 @@ fun NavGraph(
 
         composable(
             route = Screen.Category.route,
-            arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
+            arguments = listOf(navArgument("categoryId") { type = NavType.StringType }),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "saints://category/{categoryId}" }
+            )
         ) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
             val viewModel: CategoryViewModel = viewModel(
