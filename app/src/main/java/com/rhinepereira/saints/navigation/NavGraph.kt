@@ -125,7 +125,10 @@ fun NavGraph(
                     }
                 }
             )
-            ContentScreen(viewModel = viewModel)
+            ContentScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

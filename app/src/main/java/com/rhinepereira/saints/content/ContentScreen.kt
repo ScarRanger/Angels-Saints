@@ -1,14 +1,47 @@
 package com.rhinepereira.saints.content
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
@@ -19,7 +52,8 @@ import com.rhinepereira.saints.ui.components.ErrorState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentScreen(
-    viewModel: ContentViewModel
+    viewModel: ContentViewModel,
+    onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -27,9 +61,15 @@ fun ContentScreen(
         topBar = {
             TopAppBar(
                 title = { Text(uiState.content?.title ?: "Angels and Saints") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -52,24 +92,42 @@ fun ContentScreen(
                     val imageUrl = content.imageUrl?.trim()?.takeIf { it.isNotBlank() }
 
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // 1. Header Image (Completely skipped for prayers category)
+                        // 1. Header Image with Scrim
                         if (imageUrl != null && viewModel.categoryId != "prayers") {
                             var showImage by remember(imageUrl) { mutableStateOf(true) }
-                            
+
                             if (showImage) {
-                                AsyncImage(
-                                    model = imageUrl,
-                                    contentDescription = null,
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .heightIn(max = 400.dp),
-                                    contentScale = ContentScale.FillWidth,
-                                    onState = { state ->
-                                        if (state is AsyncImagePainter.State.Error) {
-                                            showImage = false
+                                        .heightIn(max = 300.dp)
+                                ) {
+                                    AsyncImage(
+                                        model = imageUrl,
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentScale = ContentScale.Crop,
+                                        onState = { state ->
+                                            if (state is AsyncImagePainter.State.Error) {
+                                                showImage = false
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(
+                                                Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        Color.Black.copy(alpha = 0.5f),
+                                                        Color.Transparent
+                                                    ),
+                                                    startY = 0f,
+                                                    endY = 500f
+                                                )
+                                            )
+                                    )
+                                }
                             }
                         }
 
@@ -103,7 +161,9 @@ private fun TabbedContent(versions: List<com.rhinepereira.saints.data.remote.Con
             indicator = { tabPositions ->
                 if (safeIndex < tabPositions.size) {
                     TabRowDefaults.Indicator(
-                        Modifier.tabIndicatorOffset(tabPositions[safeIndex])
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[safeIndex]),
+                        height = 3.dp,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -112,7 +172,8 @@ private fun TabbedContent(versions: List<com.rhinepereira.saints.data.remote.Con
                 Tab(
                     selected = safeIndex == index,
                     onClick = { selectedTabIndex = index },
-                    text = { Text(version.label ?: "Version ${index + 1}") }
+                    text = { Text(version.label ?: "Version ${index + 1}") },
+                    modifier = Modifier.padding(vertical = 16.dp)
                 )
             }
         }
@@ -139,7 +200,8 @@ private fun ContentBlockList(
     } else {
         LazyColumn(
             modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(blocks) { block ->
                 ContentBlockRenderer(block = block)
@@ -155,6 +217,13 @@ private fun EmptyContentState() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Icon(
+            imageVector = Icons.Default.CloudOff,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Content coming soon!",
             style = MaterialTheme.typography.headlineSmall,
